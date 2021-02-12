@@ -24,7 +24,7 @@ public class MazeProject
 	static boolean[][] visited = new boolean[MWIDTH][MHEIGHT];
 	static MazeComponent mazecomp;
 
-	//current position of robot
+	//current position our robot
 	static int robotX=0,robotY=0;
 
 	//true means that a "crumb" is shown in the room
