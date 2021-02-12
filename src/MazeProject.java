@@ -76,6 +76,8 @@ public class MazeProject
         {
 		    new Thread(new Runnable(){
 			    public void run() {
+			    	//different options for running the maze
+
 			    	AStar();
 			    	//depthFirstSearch();
 				    //doMazeGuided(new int[] {RIGHT,DOWN,DOWN,LEFT,UP, RIGHT, LEFT});
@@ -245,7 +247,15 @@ public class MazeProject
 //		maze[0][0]^=LEFT;    //commented out for now so that robot doesn't run out the entrance
 		maze[MWIDTH-1][MHEIGHT-1]^=RIGHT;
 	}
-	
+
+	/*
+
+	-Have the robot traverse the maze using "A-Star" method using Manhatten distance + Heuristic value
+	-Manhatten distance will be the total distance (adding both x and y distance) from the end of the maze - a low manhatten distance is good because it means we are closer to the end
+	-Heuristic in this case will simply be how many moves we have made (moveCount)
+	-Based on these two values, we will see what path is the best, work backwards using the latestMove variable, then actually move the robot to walk that path
+
+	 */
 	public static void AStar() {
 		
 		int x = robotX;
@@ -275,10 +285,7 @@ public class MazeProject
 			if(!visited[current.xCoordinate][current.yCoordinate]) {
 				visited[current.xCoordinate][current.yCoordinate] = true;
 			}
-			State neighborLEFT = null; //just initializing.
-			State neighborRIGHT = null;
-			State neighborUP = null;
-			State neighborDOWN = null;
+			State neighborLEFT, neighborRIGHT, neighborUP, neighborDOWN; //just initializing.
 			if((maze[current.xCoordinate][current.yCoordinate] & LEFT) == 0) {
 				neighborLEFT = new State(current.xCoordinate - 1, current.yCoordinate);
 				if(!visited[current.xCoordinate - 1][current.yCoordinate]) {
@@ -361,7 +368,16 @@ public class MazeProject
 		System.out.println("Total Moves: "+totalMoves);
 		System.out.println("Done");
 	}
-	
+
+	/*
+	-Robot traversing method based on depth first search algorithm
+	-The robot starts on the first square, then looks at all its neighbors, then those neighbors look at it's neighbors and so on
+	-If we search within a set of neighbors and reach a dead end, we travel back to the "start" of that neighbor tree
+	-Eventually, we reach the end of the maze after searching through enough neighbors
+	-However, this is not the optimal search algorithm for traversing this maze as quickly as possible because we might end up traversing down a long path that takes us nowhere
+	-This can happen multiple times and the robot has the potential to traverse down every path before reaching the end of the maze
+	-We want as little "squares" visited as possible
+	 */
 	public static void depthFirstSearch() {
 		
 		int x = robotX;
@@ -469,7 +485,11 @@ public class MazeProject
 		System.out.println("Total Moves: "+totalMoves);
 		System.out.println("Done");
 	}
-	
+
+	/*
+	-First AI function written for this project - this just has the robot follow a series of specific pre-defined directions
+	-The programmer is telling the A.I. the path to take rather than the A.I. figuring it out itself
+	 */
 	public static void doMazeGuided(int[] directions) {
 		
 		while(robotX != MWIDTH - 1 || robotY != MHEIGHT - 1) {
@@ -508,13 +528,9 @@ public class MazeProject
 	System.out.println("Done");
 	}
 
-
-			 
-			
-
-	
-
-	
+	/*
+	Has the robot walk in completely random directions
+	 */
 	public static void doMazeRandomWalk()
 	{
 		int dir=RIGHT;
