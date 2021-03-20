@@ -9,7 +9,6 @@ import javax.swing.*;
 
 public class MazeProject
 {
-	public static ArrayList<Integer> directions = new ArrayList<>();
 	public static int[] pathArray;
 	public static final int MWIDTH=30,MHEIGHT=30,BLOCK=20;
 	public static boolean robotActive=true;
@@ -19,36 +18,33 @@ public class MazeProject
 	public static final int LEFT=4,RIGHT=8,UP=1,DOWN=2;
 
 	//1=wall above, 2=wall below, 4=wall on left, 8=wall on right, 16=not included in maze yet
-	//So, we have a 2D array maze
 	static int[][] maze;
 	static boolean[][] visited = new boolean[MWIDTH][MHEIGHT];
 	static MazeComponent mazecomp;
 
-	//current position our robot
+	//robot starts out in the top left corner - position 0,0
 	static int robotX=0,robotY=0;
 
 	//true means that a "crumb" is shown in the room
-	//This boolean 2d array will put a "crumb" where the robot has already been, if it = true, then a crumb is placed in that spot in the 2D array
+	//This boolean 2d array will put a "crumb" where the robot has already been (if it == true)
 	static boolean[][] crumbs;
+	public static JFrame f;
 
 	public static void main(String[] args)
 	{
-		//maze a maze array and a crumb array
-		maze=new int[MWIDTH][MHEIGHT]; //establish the maze size with a width and height global final static variable
-		crumbs=new boolean[MWIDTH][MHEIGHT]; //crumbs is going to be the same size as maze, however, everything at the start is false, and when the robot steps over a
-		//section of the maze, it will be turned to true and place a crumb at that location.
+		maze=new int[MWIDTH][MHEIGHT];
+		crumbs=new boolean[MWIDTH][MHEIGHT]; //all start as false, and when the robot steps over a section of the maze, it will be turned to true and place a crumb at that location.
 		
 		//set each room to be surrounded by walls and not part of the maze
 		for (int i=0; i<MWIDTH; i++)
 			for (int j=0; j<MHEIGHT; j++)
 			{
-				//setting each element in the maze to be 31??? and each crumb to be false - this makes sense.
 				maze[i][j]=31;
 				crumbs[i][j]=false;
 			}
 
-		//generate the maze
-		makeMaze();
+		makeMaze(); //generate the maze
+
 
 		//knock down up to 100 walls
 		for(int i=0; i<100; i++)
@@ -61,14 +57,14 @@ public class MazeProject
 				maze[x+1][y]^=LEFT;
 			}
 		}
-
-		JFrame f = new JFrame();
+		f = new JFrame();
 		f.setSize(MWIDTH*BLOCK+15,MHEIGHT*BLOCK+30);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setTitle("Maze!");
 		mazecomp=new MazeComponent();
 		f.add(mazecomp);
 		f.setVisible(true);
+
 
 
 		//have the robot wander around in its own thread
@@ -78,8 +74,8 @@ public class MazeProject
 			    public void run() {
 			    	//different options for running the maze
 
-			    	AStar();
-			    	//depthFirstSearch();
+			    	//AStar();
+			    	depthFirstSearch();
 				    //doMazeGuided(new int[] {RIGHT,DOWN,DOWN,LEFT,UP, RIGHT, LEFT});
 			    	//doMazeRandomWalk();
 			    }
@@ -89,8 +85,6 @@ public class MazeProject
 
 	public static void makeMaze()
 	{
-		//making two new integer arrays of width size and height size for the maze
-		
 		int[] blockListX = new int[MWIDTH*MHEIGHT];
 		int[] blockListY = new int[MWIDTH*MHEIGHT];
 		int blocks=0;
@@ -127,19 +121,19 @@ public class MazeProject
 			blocks++;
 		}
 
-		//approach:
-		// start with a single room in maze and all neighbors of the room in the "blocklist"
-		// choose a room that is not yet part of the maze but is adjacent to the maze
-		// add it to the maze by breaking a wall
-		// put all of its neighbors that aren't in the maze into the "blocklist"
-		// repeat until everybody is in the maze
+/*		approach:
+			-start with a single room in maze and all neighbors of the room in the "blocklist"
+			-choose a room that is not yet part of the maze but is adjacent to the maze
+			-add it to the maze by breaking a wall
+			-put all of its neighbors that aren't in the maze into the "blocklist"
+			-repeat until everybody is in the maze
+		 */
 		while (blocks>0)
 		{
 			//choose a random block from blocklist
 			int b = (int)(Math.random()*blocks);
 
-			//find which block in the maze it is adjacent to
-			//and remove that wall
+			//find which block in the maze it is adjacent to and remove that wall
 			x=blockListX[b];
 			y=blockListY[b]; //here we are starting with our 'single room'
 
@@ -260,13 +254,15 @@ public class MazeProject
 		
 		int x = robotX;
 		int y = robotY;
-		
-		State first = new State(x,y); //getting the first state
+
+		// create the first state robot starts in and add it to the list
+		State first = new State(x,y);
 		first.moveCount = 0;
 		ArrayList<State> heuristicArray = new ArrayList<>();
 		heuristicArray.add(first);
 		State current = null;
 
+		//obtaining the smallest heuristic value in our array plus its index
 		while(true) {
 			int smallest = heuristicArray.get(0).heuristic;
 			int removeIndex = 0;
@@ -278,16 +274,21 @@ public class MazeProject
 			}
 			
 			current = heuristicArray.remove(removeIndex);
-			
+
+			//check if neighbors are out of bounds
 			if(current.xCoordinate == MWIDTH - 1 && current.yCoordinate == MHEIGHT - 1) {
 				break;
 			}
+			//check if we've visited the neighbor or not
 			if(!visited[current.xCoordinate][current.yCoordinate]) {
 				visited[current.xCoordinate][current.yCoordinate] = true;
 			}
-			State neighborLEFT, neighborRIGHT, neighborUP, neighborDOWN; //just initializing.
-			if((maze[current.xCoordinate][current.yCoordinate] & LEFT) == 0) {
+
+
+			State neighborLEFT, neighborRIGHT, neighborUP, neighborDOWN;
+			if((maze[current.xCoordinate][current.yCoordinate] & LEFT) == 0) { // check if robot can move left
 				neighborLEFT = new State(current.xCoordinate - 1, current.yCoordinate);
+				// if I haven't visited this state yet, store its location and add its heuristic value to my array
 				if(!visited[current.xCoordinate - 1][current.yCoordinate]) {
 					neighborLEFT.prev = current; //this will be used to traverse backwards through the maze once the optimal path has been found
 					neighborLEFT.latestMove = LEFT;
@@ -295,7 +296,7 @@ public class MazeProject
 					heuristicArray.add(neighborLEFT);
 				}
 			}
-			if((maze[current.xCoordinate][current.yCoordinate] & RIGHT) == 0) {
+			if((maze[current.xCoordinate][current.yCoordinate] & RIGHT) == 0) { // check if robot can move right
 				neighborRIGHT = new State(current.xCoordinate + 1, current.yCoordinate);
 				if(!visited[current.xCoordinate + 1][current.yCoordinate]) {
 					neighborRIGHT.prev = current;
@@ -305,7 +306,7 @@ public class MazeProject
 				}
 				
 			}
-			if((maze[current.xCoordinate][current.yCoordinate] & UP) == 0) {
+			if((maze[current.xCoordinate][current.yCoordinate] & UP) == 0) { // check if robot can move up
 				neighborUP = new State(current.xCoordinate, current.yCoordinate - 1);
 				if(!visited[current.xCoordinate][current.yCoordinate - 1]) {
 					neighborUP.prev = current;
@@ -314,7 +315,7 @@ public class MazeProject
 					heuristicArray.add(neighborUP);
 				}
 			}
-			if((maze[current.xCoordinate][current.yCoordinate] & DOWN) == 0) {
+			if((maze[current.xCoordinate][current.yCoordinate] & DOWN) == 0) { // check if robot can move down
 				neighborDOWN = new State(current.xCoordinate, current.yCoordinate + 1);
 				if(!visited[current.xCoordinate][current.yCoordinate + 1]) {
 					neighborDOWN.prev = current;
@@ -324,24 +325,24 @@ public class MazeProject
 				}
 			}
 		}
+		// work backwords, pushing states into a stack that we'll use for our traverse path through the maze
 		Stack<State> reverse = new Stack<State>();
 		while(current != null) {
 			reverse.push(current);
-			current = current.prev; //move backwards, make current the new parent
+			current = current.prev;
 		}
 
 		pathArray = new int[reverse.size()];
-		
+
+		//pop the states into my pathArray - this will be used as the path to travel the maze
 		int poptimes = reverse.size();
 		for(int i=0; i < poptimes; i++) {
 			pathArray[i] = reverse.pop().latestMove;
 		}
 		
-		robotX = robotY = 0;
-		int totalMoves = -1; //accounts for the starting position 0,0 -- I don't count that as a move.
+		robotX = robotY = 0; //reset starting position to beginning of maze
+		int totalMoves = -1; //accounts for the starting position 0,0 being a move but I don't count that as a move.
 		for(int i=0; i < pathArray.length; i++) {
-			x = robotX;
-			y = robotY;
 			
 			if(pathArray[i] == LEFT) {
 				robotX--;
@@ -361,23 +362,23 @@ public class MazeProject
 			//repaint and pause momentarily
 			mazecomp.repaint();
 			//This try, catch pauses the robot momentarily, probably so it doesn't move at blazingly fast speeds.
-			try{ Thread.sleep(SPEED); 
+			try{ Thread.sleep(SPEED); //sleeps for 100 milliseconds -- .1 seconds
 			} 
 			catch(Exception e) { }
 		}
-		System.out.println("Total Moves: "+totalMoves);
-		System.out.println("Done");
+		JOptionPane.showMessageDialog(f, "A-Star Complete. Total Moves: "+totalMoves);
+		System.exit(0);
 	}
 
-	/*
-	-Robot traversing method based on depth first search algorithm
-	-The robot starts on the first square, then looks at all its neighbors, then those neighbors look at it's neighbors and so on
-	-If we search within a set of neighbors and reach a dead end, we travel back to the "start" of that neighbor tree
-	-Eventually, we reach the end of the maze after searching through enough neighbors
-	-However, this is not the optimal search algorithm for traversing this maze as quickly as possible because we might end up traversing down a long path that takes us nowhere
-	-This can happen multiple times and the robot has the potential to traverse down every path before reaching the end of the maze
-	-We want as little "squares" visited as possible
-	 */
+/*
+	Depth First Search:
+		-The robot starts on the first square, then looks at all its neighbors, then those neighbors look at its neighbors and so on
+		-If we search within a set of neighbors and reach a dead end, we travel back to the "start" of that neighbor tree
+		-Eventually, we reach the end of the maze after searching through enough neighbors
+		-However, this is not the optimal search algorithm for traversing this maze as quickly as possible because we might end up traversing down a long path that takes us nowhere
+		-This can happen multiple times and the robot has the potential to traverse down every path before reaching the end of the maze
+		-We want as little states visited as possible
+ */
 	public static void depthFirstSearch() {
 		
 		int x = robotX;
@@ -400,10 +401,7 @@ public class MazeProject
 			}
 
 			
-			State neighborLEFT = null; //just initializing.
-			State neighborRIGHT = null;
-			State neighborUP = null;
-			State neighborDOWN = null;
+			State neighborLEFT, neighborRIGHT, neighborUP, neighborDOWN;
 			if((maze[current.xCoordinate][current.yCoordinate] & LEFT) == 0) {
 				neighborLEFT = new State(current.xCoordinate - 1, current.yCoordinate);
 				if(!visited[current.xCoordinate - 1][current.yCoordinate]) {
@@ -444,7 +442,7 @@ public class MazeProject
 		Stack<State> reverse = new Stack<State>();
 		while(current != null) {
 			reverse.push(current);
-			current = current.prev; //move backwards, make current the new parent
+			current = current.prev;
 		}
 		
 		pathArray = new int[reverse.size()];
@@ -474,16 +472,15 @@ public class MazeProject
 			}
 			totalMoves++;
 			crumbs[robotX][robotY] = true;
-			
-			//repaint and pause momentarily
+
 			mazecomp.repaint();
-			//This try, catch pauses the robot momentarily, probably so it doesn't move at blazingly fast speeds.
 			try{ Thread.sleep(SPEED); 
 			} 
 			catch(Exception e) { }
 		}
-		System.out.println("Total Moves: "+totalMoves);
-		System.out.println("Done");
+		JOptionPane.showMessageDialog(f, "Depth First Search Complete. Total Moves = "+totalMoves);
+		System.exit(0);
+
 	}
 
 	/*
@@ -516,31 +513,26 @@ public class MazeProject
 				crumbs[x][y] = true;
 				 
 			}
-			//repaint and pause momentarily
 			mazecomp.repaint();
-			//This try, catch pauses the robot momentarily, probably so it doesn't move at blazingly fast speeds.
 			try{ Thread.sleep(SPEED); 
 			} 
 			catch(Exception e) { }
-				
-			
 	}
-	System.out.println("Done");
+		JOptionPane.showMessageDialog(f, "DoMazeGuided Complete.");
+		System.exit(0);
 	}
 
 	/*
-	Has the robot walk in completely random directions
+	doMazeRandomWalk() has the robot walk in completely random directions
 	 */
 	public static void doMazeRandomWalk()
 	{
-		int dir=RIGHT;
-
 		while(robotX!=MWIDTH-1 || robotY!=MHEIGHT-1)
 		{
 			int x=robotX;
 			int y=robotY;
 
-			dir=new int[]{LEFT,RIGHT,UP,DOWN}[(int)(Math.random()*4)];
+			 int dir=new int[]{LEFT,RIGHT,UP,DOWN}[(int)(Math.random()*4)];
 
 			if((maze[x][y] & dir) == 0) //performs an and function across every bit in maze
 			{
@@ -558,7 +550,8 @@ public class MazeProject
 			//This try, catch pauses the robot momentarily, probably so it doesn't move at blazingly fast speeds.
 			try{ Thread.sleep(SPEED); } catch(Exception e) { }
 		}
-		System.out.println("Done");
+		JOptionPane.showMessageDialog(f, "doMazeRandomWalk Complete.");
+		System.exit(0);
 	} 
 
 
