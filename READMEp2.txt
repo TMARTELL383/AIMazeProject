@@ -1,3 +1,6 @@
+The following project was an assignment in my Artificial Intelligence class in the Fall of 2020. The professor gave us the GUI framework for creating a random maze. My task was to create a little green "robot ball" that traverses through the maze using a variety of search methods including Depth First Search and A-Star (A*). Both functions worked great at the time of submission. My report for the project is below.
+
+
 -----MAZE A.I.-----
 
 -----By: Tyler Martell-----
